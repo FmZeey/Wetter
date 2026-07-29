@@ -110,6 +110,17 @@
     color:var(--fog-2);
     padding:14px 0 5px;border-bottom:1px solid var(--line);
   }
+  .legend{
+    display:grid;gap:7px;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog-2);
+    padding:9px 0 5px;
+  }
+  .legend.h{grid-template-columns:2.4rem 1.05rem minmax(30px,1fr) 2.6rem 2.9rem 1.55rem}
+  .legend.d{grid-template-columns:2.6rem 1.05rem 1fr 3.4rem 2.9rem 1.55rem}
+  .legend .r{text-align:right}
+  .legend .c{text-align:center}
+
   .hr-row{
     display:grid;
     grid-template-columns:2.4rem 1.05rem minmax(30px,1fr) 2.6rem 2.9rem 1.55rem;
@@ -205,8 +216,9 @@
 
   <p class="note">
     Quelle: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>,
-    basierend auf dem ICON-Modell des Deutschen Wetterdienstes. Windstärke in Beaufort,
-    Richtung ist die Herkunftsrichtung. UV-Index nach WHO-Farbskala.
+    basierend auf dem ICON-Modell des Deutschen Wetterdienstes. Wind in km/h,
+    der Pfeil zeigt die Wehrichtung, die Himmelsrichtung im Kopf ist die Herkunft.
+    UV-Index nach WHO-Farbskala.
     Aktualisiert sich automatisch alle 10 Minuten.
   </p>
 
@@ -345,7 +357,8 @@ function render(d){
     <span>Untergang ${fmtT(D.sunset[0])}</span>
   </div>
 
-  <h2>Stundenverlauf <span>nächste ${HOURS_AHEAD} h</span></h2>`;
+  <h2>Stundenverlauf <span>nächste ${HOURS_AHEAD} h</span></h2>
+  <div class="legend h"><div>Zeit</div><div></div><div></div><div class="r">°C</div><div>km/h</div><div class="c">UV</div></div>`;
 
   /* --- Stundenzeilen --- */
   let lastDay="";
@@ -369,7 +382,7 @@ function render(d){
         <span class="dot" style="left:${p}%"></span>
       </div>
       <div class="tt" style="color:${c}">${Math.round(t)}°</div>
-      <div class="wd">${ARROW.replace("DEG",(H.wind_direction_10m[i]+180))}${beaufort(w)}<span style="opacity:.6">Bft</span></div>
+      <div class="wd">${ARROW.replace("DEG",(H.wind_direction_10m[i]+180))}${Math.round(w)}</div>
       ${u>=0.5
         ? `<div class="uv" style="color:${uvColor(u)};background:${uvColor(u)}22">${Math.round(u)}</div>`
         : `<div class="uv zero">–</div>`}
@@ -379,7 +392,8 @@ function render(d){
   /* --- Tage --- */
   const wLo=Math.min(...D.temperature_2m_min), wHi=Math.max(...D.temperature_2m_max);
   const wR=Math.max(1,wHi-wLo);
-  html+=`<h2>Sieben Tage <span>Min / Max</span></h2>`;
+  html+=`<h2>Sieben Tage <span>Tageshöchstwerte</span></h2>
+  <div class="legend d"><div>Tag</div><div></div><div></div><div class="r">Min Max</div><div>km/h</div><div class="c">UV</div></div>`;
   D.time.forEach((day,i)=>{
     const dt=new Date(day+"T12:00:00");
     const mn=D.temperature_2m_min[i], mx=D.temperature_2m_max[i];
@@ -392,7 +406,7 @@ function render(d){
         <span class="span" style="left:${l}%;width:${Math.max(3,r-l)}%"></span>
       </div>
       <div class="mm">${Math.round(mn)}° <b>${Math.round(mx)}°</b></div>
-      <div class="wd">${beaufort(D.wind_speed_10m_max[i])}<span style="opacity:.6">Bft</span></div>
+      <div class="wd">${Math.round(D.wind_speed_10m_max[i])}</div>
       <div class="uv" style="color:${uvColor(D.uv_index_max[i])};background:${uvColor(D.uv_index_max[i])}22">${Math.round(D.uv_index_max[i])}</div>
     </div>`;
   });
