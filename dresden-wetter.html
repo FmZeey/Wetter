@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dresden · Wetter</title>
+<meta name="theme-color" content="#0B1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dresden">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1220;
+    --ink-2:#111A2B;
+    --line:rgba(255,255,255,.08);
+    --line-2:rgba(255,255,255,.14);
+    --fog:#8B9BB4;
+    --fog-2:#5F6E86;
+    --snow:#EDF2F8;
+    --elbe:#4FB6C4;
+    --row:38px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--ink);
+    color:var(--snow);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding:
+      calc(env(safe-area-inset-top) + 18px)
+      calc(env(safe-area-inset-right) + 16px)
+      calc(env(safe-area-inset-bottom) + 28px)
+      calc(env(safe-area-inset-left) + 16px);
+  }
+  .wrap{max-width:480px;margin:0 auto}
+
+  /* ---------- Kopf ---------- */
+  .top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .place{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--fog);
+  }
+  .place b{color:var(--snow);font-weight:600}
+  .clock{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:11px;letter-spacing:.1em;color:var(--fog-2);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- Jetzt ---------- */
+  .now{margin-top:22px;display:flex;align-items:flex-start;gap:16px}
+  .temp-now{
+    font-family:Fraunces,Georgia,serif;
+    font-weight:300;
+    font-size:82px;line-height:.82;
+    letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;
+  }
+  .temp-now sup{font-size:.32em;vertical-align:super;font-weight:400;opacity:.5}
+  .now-side{padding-top:6px;flex:1;min-width:0}
+  .cond{font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:400;line-height:1.25}
+  .feels{font-size:12.5px;color:var(--fog);margin-top:3px}
+
+  .now-stats{
+    margin-top:18px;
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  }
+  .stat{padding:12px 0}
+  .stat + .stat{border-left:1px solid var(--line);padding-left:14px}
+  .stat .k{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--fog-2);
+  }
+  .stat .v{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:17px;font-weight:500;margin-top:5px;font-variant-numeric:tabular-nums;
+    display:flex;align-items:center;gap:6px;
+  }
+  .stat .u{font-size:10.5px;color:var(--fog);font-weight:400}
+  .stat .s{font-size:11px;color:var(--fog);margin-top:2px;font-family:"IBM Plex Sans",sans-serif}
+
+  .sun{
+    margin-top:12px;
+    font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--fog-2);
+    letter-spacing:.06em;font-variant-numeric:tabular-nums;
+    display:flex;gap:16px;
+  }
+
+  /* ---------- Abschnitte ---------- */
+  h2{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--fog-2);font-weight:500;
+    margin:30px 0 6px;
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  h2 span{letter-spacing:.04em;text-transform:none;font-size:10px}
+
+  /* ---------- Stundenzeile ---------- */
+  .daybreak{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--fog-2);
+    padding:14px 0 5px;border-bottom:1px solid var(--line);
+  }
+  .hr-row{
+    display:grid;
+    grid-template-columns:2.4rem 1.05rem minmax(30px,1fr) 2.6rem 2.9rem 1.55rem;
+    align-items:center;gap:7px;
+    height:var(--row);
+    border-bottom:1px solid var(--line);
+    font-family:"IBM Plex Mono",monospace;
+    font-variant-numeric:tabular-nums;
+    font-size:12.5px;
+  }
+  .hr-row.night{opacity:.5}
+  .hr-row.now-row{
+    background:linear-gradient(90deg,rgba(79,182,196,.13),transparent 72%);
+    opacity:1;
+    box-shadow:inset 2px 0 0 var(--elbe);
+    padding-left:6px;margin-left:-6px;
+  }
+  .hh{color:var(--fog);letter-spacing:.02em}
+  .now-row .hh{color:var(--elbe);font-weight:600}
+  .ico{color:var(--fog);display:flex}
+  .ico svg{width:15px;height:15px;display:block}
+
+  .track{position:relative;height:var(--row);display:flex;align-items:center}
+  .track .base{position:absolute;left:0;right:0;height:1px;background:var(--line-2)}
+  .track .bar{position:absolute;left:0;height:1px;background:currentColor;opacity:.55}
+  .track .dot{position:absolute;width:5px;height:5px;border-radius:50%;background:currentColor;transform:translateX(-2.5px)}
+
+  .tt{text-align:right;font-weight:500}
+  .wd{display:flex;align-items:center;gap:4px;color:var(--fog);font-size:11.5px}
+  .wd svg{width:11px;height:11px;flex:none;color:var(--elbe)}
+  .uv{
+    text-align:center;font-size:11px;font-weight:600;
+    border-radius:4px;padding:2px 0;
+  }
+  .uv.zero{color:var(--fog-2);font-weight:400;background:none}
+
+  /* ---------- Tage ---------- */
+  .d-row{
+    display:grid;
+    grid-template-columns:2.6rem 1.05rem 1fr 3.4rem 2.9rem 1.55rem;
+    align-items:center;gap:7px;
+    height:42px;border-bottom:1px solid var(--line);
+    font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:12.5px;
+  }
+  .d-row .dname{color:var(--snow);text-transform:capitalize;font-size:12px}
+  .d-row .rng{position:relative;height:42px;display:flex;align-items:center}
+  .d-row .rng .base{position:absolute;left:0;right:0;height:2px;border-radius:2px;background:var(--line-2)}
+  .d-row .rng .span{position:absolute;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--c1),var(--c2))}
+  .d-row .mm{text-align:right;color:var(--fog)}
+  .d-row .mm b{color:var(--snow);font-weight:500}
+
+  /* ---------- Fuß / Zustände ---------- */
+  .bar-actions{margin-top:26px;display:flex;gap:10px;align-items:center}
+  button{
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    background:transparent;color:var(--fog);border:1px solid var(--line-2);
+    border-radius:999px;padding:9px 16px;cursor:pointer;
+  }
+  button:hover{color:var(--snow);border-color:var(--fog)}
+  button:focus-visible{outline:2px solid var(--elbe);outline-offset:2px}
+  .note{margin-top:16px;font-size:10.5px;line-height:1.6;color:var(--fog-2)}
+  .note a{color:var(--fog);text-decoration:underline;text-underline-offset:2px}
+
+  .state{
+    padding:34px 0;font-size:13px;line-height:1.6;color:var(--fog);
+  }
+  .state b{display:block;font-family:Fraunces,Georgia,serif;font-size:17px;color:var(--snow);
+    font-weight:400;margin-bottom:7px}
+  .skeleton{height:1px;background:var(--line);margin:0}
+
+  @media (prefers-reduced-motion:no-preference){
+    .hr-row,.d-row{animation:rise .38s ease both}
+    @keyframes rise{from{opacity:0;transform:translateY(5px)}}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="place">Dresden <b>·</b> Elbtal</div>
+    <div class="clock" id="clock">–:–</div>
+  </div>
+
+  <div id="app">
+    <div class="state"><b>Daten werden geladen</b>Wetterdaten für Dresden von Open-Meteo.</div>
+  </div>
+
+  <div class="bar-actions">
+    <button id="reload" type="button">Aktualisieren</button>
+    <span class="clock" id="stand"></span>
+  </div>
+
+  <p class="note">
+    Quelle: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>,
+    basierend auf dem ICON-Modell des Deutschen Wetterdienstes. Windstärke in Beaufort,
+    Richtung ist die Herkunftsrichtung. UV-Index nach WHO-Farbskala.
+    Aktualisiert sich automatisch alle 10 Minuten.
+  </p>
+
+</div>
+
+<script>
+const LAT = 51.0504, LON = 13.7373;
+const URL_API = "https://api.open-meteo.com/v1/forecast"
+  + "?latitude=" + LAT + "&longitude=" + LON
+  + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index"
+  + "&hourly=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,uv_index"
+  + "&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,wind_speed_10m_max,sunrise,sunset"
+  + "&timezone=Europe%2FBerlin&forecast_days=7";
+
+const HOURS_AHEAD = 36;
+
+/* ---------- Hilfen ---------- */
+const pad = n => String(n).padStart(2,"0");
+
+function beaufort(kmh){
+  const t=[1,6,12,20,29,39,50,62,75,89,103,118];
+  let b=0; for(let i=0;i<t.length;i++) if(kmh>=t[i]) b=i+1;
+  return b;
+}
+const DIRS=["N","NNO","NO","ONO","O","OSO","SO","SSO","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+const compass = d => DIRS[Math.round(((d%360)+360)%360/22.5)%16];
+
+function uvColor(u){
+  if(u<3)  return "#3EA72D";
+  if(u<6)  return "#E5D400";
+  if(u<8)  return "#F18B00";
+  if(u<11) return "#E5432F";
+  return "#A45BD8";
+}
+function uvWord(u){
+  if(u<3) return "niedrig";
+  if(u<6) return "mäßig";
+  if(u<8) return "hoch";
+  if(u<11) return "sehr hoch";
+  return "extrem";
+}
+const TSTOPS=[[-12,"#6FA8FF"],[0,"#8FD3E8"],[9,"#7ED9A8"],[18,"#E9D67A"],[25,"#F2A25C"],[33,"#EE6B5A"]];
+function tempColor(t){
+  if(t<=TSTOPS[0][0]) return TSTOPS[0][1];
+  for(let i=0;i<TSTOPS.length-1;i++){
+    const [a,ca]=TSTOPS[i],[b,cb]=TSTOPS[i+1];
+    if(t<=b){
+      const k=(t-a)/(b-a), p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+      const A=p(ca),B=p(cb);
+      return "rgb("+A.map((v,i)=>Math.round(v+(B[i]-v)*k)).join(",")+")";
+    }
+  }
+  return TSTOPS[TSTOPS.length-1][1];
+}
+
+const CODES={
+  0:["klar","sun"],1:["überwiegend klar","sun"],2:["teilweise bewölkt","partly"],3:["bedeckt","cloud"],
+  45:["Nebel","fog"],48:["Reifnebel","fog"],
+  51:["leichter Niesel","drizzle"],53:["Niesel","drizzle"],55:["dichter Niesel","drizzle"],
+  56:["gefrierender Niesel","drizzle"],57:["gefrierender Niesel","drizzle"],
+  61:["leichter Regen","rain"],63:["Regen","rain"],65:["starker Regen","rain"],
+  66:["gefrierender Regen","rain"],67:["gefrierender Regen","rain"],
+  71:["leichter Schneefall","snow"],73:["Schneefall","snow"],75:["starker Schneefall","snow"],
+  77:["Schneegriesel","snow"],
+  80:["Regenschauer","rain"],81:["Regenschauer","rain"],82:["kräftige Schauer","rain"],
+  85:["Schneeschauer","snow"],86:["Schneeschauer","snow"],
+  95:["Gewitter","storm"],96:["Gewitter mit Hagel","storm"],99:["Gewitter mit Hagel","storm"]
+};
+const desc = c => (CODES[c]||["unbekannt","cloud"])[0];
+const kind = c => (CODES[c]||["unbekannt","cloud"])[1];
+
+const S='stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+const ICONS={
+  sun:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.4" ${S}/><g ${S}><path d="M12 2.4v2M12 19.6v2M2.4 12h2M19.6 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></g></svg>`,
+  partly:`<svg viewBox="0 0 24 24"><g ${S}><circle cx="8.6" cy="8.6" r="3.3"/><path d="M8.6 2.6v1.6M2.6 8.6h1.6M4.3 4.3l1.1 1.1M12.9 4.3l-1.1 1.1"/><path d="M17 20.5H8.4a3.9 3.9 0 0 1-.3-7.8 5.2 5.2 0 0 1 9.9 1.3 3.3 3.3 0 0 1-1 6.5Z"/></g></svg>`,
+  cloud:`<svg viewBox="0 0 24 24"><path d="M17.4 19.5H7.6a4.1 4.1 0 0 1-.3-8.2 5.5 5.5 0 0 1 10.5 1.4 3.4 3.4 0 0 1-.4 6.8Z" ${S}/></svg>`,
+  fog:`<svg viewBox="0 0 24 24"><g ${S}><path d="M17 14.5H7.4a4 4 0 0 1-.3-8 5.4 5.4 0 0 1 10.3 1.4 3.3 3.3 0 0 1-.4 6.6Z"/><path d="M4.5 18h15M7 21h11"/></g></svg>`,
+  drizzle:`<svg viewBox="0 0 24 24"><g ${S}><path d="M17 14.2H7.5a4 4 0 0 1-.3-7.9 5.4 5.4 0 0 1 10.2 1.3 3.3 3.3 0 0 1-.4 6.6Z"/><path d="M9 17.6v1.6M13 17.6v1.6M17 17.6v1.6"/></g></svg>`,
+  rain:`<svg viewBox="0 0 24 24"><g ${S}><path d="M17 13.6H7.5a4 4 0 0 1-.3-7.9 5.4 5.4 0 0 1 10.2 1.3 3.3 3.3 0 0 1-.4 6.6Z"/><path d="M8.6 16.6 7.4 20M13 16.6 11.8 20M17.4 16.6 16.2 20"/></g></svg>`,
+  snow:`<svg viewBox="0 0 24 24"><g ${S}><path d="M17 13.6H7.5a4 4 0 0 1-.3-7.9 5.4 5.4 0 0 1 10.2 1.3 3.3 3.3 0 0 1-.4 6.6Z"/><path d="M9 17.4v2.4M7.8 18.6h2.4M15 17.4v2.4M13.8 18.6h2.4"/></g></svg>`,
+  storm:`<svg viewBox="0 0 24 24"><g ${S}><path d="M17 12.9H7.5a4 4 0 0 1-.3-7.9 5.4 5.4 0 0 1 10.2 1.3 3.3 3.3 0 0 1-.4 6.6Z"/><path d="m12.8 15.4-3 3.6h3l-1.2 3"/></g></svg>`
+};
+const ARROW=`<svg viewBox="0 0 24 24" style="transform:rotate(DEGdeg)"><g stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4.5"/><path d="M6.6 10 12 4.3 17.4 10"/></g></svg>`;
+
+/* ---------- Rendern ---------- */
+function render(d){
+  const H=d.hourly, D=d.daily, C=d.current;
+  const now=new Date();
+  const nowKey=H.time.findIndex(t=>new Date(t)>=new Date(now.getFullYear(),now.getMonth(),now.getDate(),now.getHours()));
+  const start=Math.max(0,nowKey);
+  const idx=[]; for(let i=start;i<Math.min(H.time.length,start+HOURS_AHEAD);i++) idx.push(i);
+
+  const temps=idx.map(i=>H.temperature_2m[i]);
+  const lo=Math.min(...temps), hi=Math.max(...temps), rng=Math.max(1,hi-lo);
+  const pct=t=>4+((t-lo)/rng)*92;
+
+  const sunrise=D.sunrise.map(s=>new Date(s)), sunset=D.sunset.map(s=>new Date(s));
+  const isDay=dt=>{
+    const k=D.time.findIndex(x=>x===dt.toISOString().slice(0,10));
+    if(k<0) return true;
+    return dt>=sunrise[k] && dt<=sunset[k];
+  };
+
+  /* --- Jetzt-Block --- */
+  const bft=beaufort(C.wind_speed_10m);
+  const uvN=Math.round(C.uv_index*10)/10;
+  let html=`
+  <div class="now">
+    <div class="temp-now">${Math.round(C.temperature_2m)}<sup>°C</sup></div>
+    <div class="now-side">
+      <div class="cond">${desc(C.weather_code)}</div>
+      <div class="feels">gefühlt ${Math.round(C.apparent_temperature)}° · Tief ${Math.round(D.temperature_2m_min[0])}° / Hoch ${Math.round(D.temperature_2m_max[0])}°</div>
+    </div>
+  </div>
+
+  <div class="now-stats">
+    <div class="stat">
+      <div class="k">Wind</div>
+      <div class="v">${Math.round(C.wind_speed_10m)}<span class="u">km/h</span></div>
+      <div class="s">${bft} Bft · aus ${compass(C.wind_direction_10m)}</div>
+    </div>
+    <div class="stat">
+      <div class="k">Böen</div>
+      <div class="v">${Math.round(C.wind_gusts_10m)}<span class="u">km/h</span></div>
+      <div class="s">Spitze aktuell</div>
+    </div>
+    <div class="stat">
+      <div class="k">UV-Index</div>
+      <div class="v" style="color:${uvColor(uvN)}">${uvN}</div>
+      <div class="s">${uvWord(uvN)} · max heute ${Math.round(D.uv_index_max[0])}</div>
+    </div>
+  </div>
+
+  <div class="sun">
+    <span>Sonnenaufgang ${fmtT(D.sunrise[0])}</span>
+    <span>Untergang ${fmtT(D.sunset[0])}</span>
+  </div>
+
+  <h2>Stundenverlauf <span>nächste ${HOURS_AHEAD} h</span></h2>`;
+
+  /* --- Stundenzeilen --- */
+  let lastDay="";
+  idx.forEach((i,n)=>{
+    const dt=new Date(H.time[i]);
+    const dayKey=dt.toISOString().slice(0,10);
+    if(dayKey!==lastDay){
+      lastDay=dayKey;
+      const lbl=n===0 ? "Heute" : dt.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
+      html+=`<div class="daybreak">${lbl}</div>`;
+    }
+    const t=H.temperature_2m[i], u=H.uv_index[i]||0, w=H.wind_speed_10m[i];
+    const c=tempColor(t), p=pct(t);
+    const night=!isDay(dt);
+    const isNow=n===0;
+    html+=`<div class="hr-row${night?" night":""}${isNow?" now-row":""}" style="animation-delay:${Math.min(n*12,320)}ms">
+      <div class="hh">${isNow?"jetzt":pad(dt.getHours())+"h"}</div>
+      <div class="ico">${ICONS[kind(H.weather_code[i])]}</div>
+      <div class="track" style="color:${c}">
+        <span class="base"></span><span class="bar" style="width:${p}%"></span>
+        <span class="dot" style="left:${p}%"></span>
+      </div>
+      <div class="tt" style="color:${c}">${Math.round(t)}°</div>
+      <div class="wd">${ARROW.replace("DEG",(H.wind_direction_10m[i]+180))}${beaufort(w)}<span style="opacity:.6">Bft</span></div>
+      ${u>=0.5
+        ? `<div class="uv" style="color:${uvColor(u)};background:${uvColor(u)}22">${Math.round(u)}</div>`
+        : `<div class="uv zero">–</div>`}
+    </div>`;
+  });
+
+  /* --- Tage --- */
+  const wLo=Math.min(...D.temperature_2m_min), wHi=Math.max(...D.temperature_2m_max);
+  const wR=Math.max(1,wHi-wLo);
+  html+=`<h2>Sieben Tage <span>Min / Max</span></h2>`;
+  D.time.forEach((day,i)=>{
+    const dt=new Date(day+"T12:00:00");
+    const mn=D.temperature_2m_min[i], mx=D.temperature_2m_max[i];
+    const l=((mn-wLo)/wR)*100, r=((mx-wLo)/wR)*100;
+    html+=`<div class="d-row" style="animation-delay:${Math.min(i*30,240)}ms">
+      <div class="dname">${i===0?"Heute":dt.toLocaleDateString("de-DE",{weekday:"short"})}</div>
+      <div class="ico">${ICONS[kind(D.weather_code[i])]}</div>
+      <div class="rng" style="--c1:${tempColor(mn)};--c2:${tempColor(mx)}">
+        <span class="base"></span>
+        <span class="span" style="left:${l}%;width:${Math.max(3,r-l)}%"></span>
+      </div>
+      <div class="mm">${Math.round(mn)}° <b>${Math.round(mx)}°</b></div>
+      <div class="wd">${beaufort(D.wind_speed_10m_max[i])}<span style="opacity:.6">Bft</span></div>
+      <div class="uv" style="color:${uvColor(D.uv_index_max[i])};background:${uvColor(D.uv_index_max[i])}22">${Math.round(D.uv_index_max[i])}</div>
+    </div>`;
+  });
+
+  document.getElementById("app").innerHTML=html;
+  document.getElementById("stand").textContent="Stand "+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+}
+
+const fmtT = s => new Date(s).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+
+/* ---------- Laden ---------- */
+async function load(){
+  try{
+    const r=await fetch(URL_API,{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    render(await r.json());
+  }catch(e){
+    document.getElementById("app").innerHTML=
+      `<div class="state"><b>Keine Verbindung zum Wetterdienst</b>
+       Die Vorschau in einer App-Sandbox darf oft keine fremden Server aufrufen.
+       Speichere die Datei und öffne sie direkt im Browser deines Handys —
+       dort lädt sie normal. Fehler: ${String(e.message||e)}</div>`;
+  }
+}
+
+function tick(){
+  document.getElementById("clock").textContent=
+    new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+}
+tick(); setInterval(tick,1000);
+document.getElementById("reload").addEventListener("click",load);
+setInterval(load,600000);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) load(); });
+load();
+</script>
+</body>
+</html>
